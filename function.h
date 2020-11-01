@@ -1,16 +1,16 @@
 #pragma once
 
-#include "functionhelper.h"
+#include "function-helper.h"
 
 template <typename R, typename... Args>
 struct function<R (Args...)>
 {
 private:
-    FunctionStorage<R, Args...> storage;
+    function_helper::FunctionStorage<R, Args...> storage;
 public:
     function() noexcept
     {
-        storage.desc = EmptyTypeDescriptor<R, Args...>();
+        storage.desc = function_helper::EmptyTypeDescriptor<R, Args...>();
     }
 
     function(function const& other)
@@ -25,11 +25,11 @@ public:
     template <typename T>
     function(T val)
     {
-        if constexpr (IsSmallObject<T>())
+        if constexpr (function_helper::is_small_object_v<T>)
             new(&storage.buf) T(std::move(val));
         else
             *reinterpret_cast<const T **>(&storage.buf) = new T(std::move(val));
-        storage.desc = FunctionTraits<T, IsSmallObject<T>()>::template Descr<R, Args...>();
+        storage.desc = function_helper::FunctionTraits<T>::template Descr<R, Args...>();
     }
 
     function& operator=(function const& rhs)
@@ -60,7 +60,7 @@ public:
         if (this == &rhs)
             return *this;
         storage.desc->Destroy(&storage);
-        storage.desc = EmptyTypeDescriptor<R, Args...>();
+        storage.desc = function_helper::EmptyTypeDescriptor<R, Args...>();
         rhs.storage.desc->Move(&storage, &rhs.storage);
         return *this;
     }
@@ -72,7 +72,7 @@ public:
 
     explicit operator bool() const noexcept
     {
-        return storage.desc != EmptyTypeDescriptor<R, Args...>();
+        return storage.desc != function_helper::EmptyTypeDescriptor<R, Args...>();
     }
 
     R operator()(Args... args) const
@@ -83,9 +83,9 @@ public:
     template <typename T>
     T* target() noexcept
     {
-        if (FunctionTraits<T, IsSmallObject<T>()>::template Descr<R, Args...>() != storage.desc)
+        if (function_helper::FunctionTraits<T>::template Descr<R, Args...>() != storage.desc)
             return nullptr;
-        if constexpr (IsSmallObject<T>())
+        if constexpr (function_helper::is_small_object_v<T>)
             return storage.template SmallCast<T>();
         else
             return storage.template BigCast<T>();
@@ -94,9 +94,9 @@ public:
     template <typename T>
     T const* target() const noexcept
     {
-        if (FunctionTraits<T, IsSmallObject<T>()>::template Descr<R, Args...>() != storage.desc)
+        if (function_helper::FunctionTraits<T>::template Descr<R, Args...>() != storage.desc)
             return nullptr;
-        if constexpr (IsSmallObject<T>())
+        if constexpr (function_helper::is_small_object_v<T>)
             return storage.template SmallCast<T>();
         else
             return storage.template BigCast<T>();
