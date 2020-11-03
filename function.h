@@ -36,23 +36,7 @@ public:
     {
         if (this == &rhs)
             return *this;
-        decltype(storage.buf) copy = storage.buf;
-        decltype(storage.desc) dcopy = storage.desc;
-        try
-        {
-            rhs.storage.desc->Copy(&storage, &rhs.storage);
-            // noexcept part
-            storage.desc = std::move(dcopy);
-            std::swap(copy, storage.buf);
-            storage.desc->Destroy(&storage);
-            storage.buf = copy;
-            storage.desc = rhs.storage.desc;
-        }
-        catch (...)
-        {
-            // storage.buf = copy; // copy has not changed anything
-            throw;
-        }
+        storage.Copy(rhs.storage);
         return *this;
     }
     function& operator=(function&& rhs) noexcept

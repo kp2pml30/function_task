@@ -69,6 +69,18 @@ namespace function_helper
             using Tptr = T *;
             return *reinterpret_cast<Tptr *>(&buf);
         }
+
+        void Copy(FunctionStorage const& rhs)
+        {
+            decltype(buf) copy = buf;
+            decltype(desc) dcopy = desc;
+            rhs.desc->Copy(this, &rhs);
+            desc = std::move(dcopy);
+            std::swap(copy, buf);
+            desc->Destroy(this);
+            buf = copy;
+            desc = rhs.desc;
+        }
     };
 
     template<typename R, typename... Args>
