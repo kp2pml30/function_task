@@ -87,7 +87,7 @@ namespace function_helper
     struct TypeDescriptor
     {
     private:
-        using FunctionStorage = FunctionStorage<R, Args...>;
+        using FunctionStorage = function_helper::FunctionStorage<R, Args...>;
     public:
         void (*Destroy)(FunctionStorage *del);
         void (*Move)(FunctionStorage *to, FunctionStorage *from);
